@@ -1,4 +1,5 @@
 import click
+
 from library.chatgpt import ChatGPT
 from library.chatgpt import ONLY_ANSWER
 from library.cli import IMPORTANT
@@ -16,30 +17,36 @@ def sai():
 # todo: add ignore and parse wildcards option
 @sai.command()
 @click.argument("path", default=".", type=click.Path(exists=True))
-@click.option("--project-name", default=None)
-def train(path, project_name: str = None):
+@click.option("--conversation_id", default=None)
+def train(path, conversation_id: str = None):
     """Read all the files in a folder and train ChatGPT on them via a prompt"""
 
-    chatgpt = ChatGPT(bearer, cookie, project_name)
+    click.secho(
+        "This command opens a new chat and train ChatGPT on the proejct you're listing."
+    )
+    input("Do you want to continue? (Press enter to continue)")
+
+    chatgpt = ChatGPT(bearer, cookie, conversation_id)
     train_project(chatgpt, path)
     click.secho("Training done! Now you can ask questions about your project.")
+    click.launch(chatgpt.chat_url.format(chatgpt.conversation_id))
 
 
 @sai.command()
 @click.argument("prompt")
-@click.option("--project-name", default=None)
-def ask(prompt: str, project_name: str = None):
+@click.option("--conversation_id", default=None)
+def ask(prompt: str, conversation_id: str = None):
     """Ask any question about the project"""
-    chatgpt = ChatGPT(bearer, cookie, project_name)
+    chatgpt = ChatGPT(bearer, cookie, conversation_id)
     chatgpt.ask(prompt)
 
 
 @sai.command()
-@click.option("--project-name", default=None)
-def conversation(project_name: str = None):
+@click.option("--conversation_id", default=None)
+def conversation(conversation_id: str = None):
     """Ask any question about the project"""
 
-    chatgpt = ChatGPT(bearer, cookie, project_name)
+    chatgpt = ChatGPT(bearer, cookie, conversation_id)
     chatgpt.verbosity = ONLY_ANSWER
 
     click.secho("You can now start a conversation with ChatGPT.")
@@ -49,6 +56,21 @@ def conversation(project_name: str = None):
         if prompt in ["stop", "exit"]:
             break
         chatgpt.ask(prompt)
+
+
+@sai.command()
+def list():
+    """List all the projects you have created"""
+    chatgpt = ChatGPT(bearer, cookie)
+    chatgpt.list_chats()
+
+
+@sai.command()
+@click.option("--conversation_id", default=None)
+def select_conversation(conversation_id: str):
+    """Select a conversation to ask questions about"""
+    chatgpt = ChatGPT(bearer, cookie)
+    chatgpt.select_chat(conversation_id)
 
 
 if __name__ == "__main__":

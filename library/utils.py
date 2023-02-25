@@ -39,16 +39,19 @@ def train_project(chatgpt: ChatGPT, path: str, project: str = None):
         chatgpt.ask(prompt)
 
     answer = chatgpt.ask("UPLOAD_COMPLETED")
+    save_project(project, chatgpt.conversation_id, chatgpt.last_message_id)
+    return answer
+
+
+def save_project(project: str, conversation_id: str, last_message_id: str):
     json.dump(
         {
-            "conversation_id": chatgpt.conversation_id,
-            "last_message_id": chatgpt.last_message_id,
+            "conversation_id": conversation_id,
+            "last_message_id": last_message_id,
         },
         open(f"./projects/{project}.json", "w"),
         indent=4,
     )
-
-    return answer
 
 
 if __name__ == "__main__":

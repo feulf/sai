@@ -73,5 +73,13 @@ def select_conversation(conversation_id: str):
     chatgpt.select_chat(conversation_id)
 
 
+@sai.command()
+@click.argument("conversation_ids", nargs=-1)
+def delete_conversation(conversation_ids):
+    """Delete a conversation"""
+    chatgpt = ChatGPT(bearer, cookie)
+    chatgpt.delete_chats(conversation_ids)
+
+
 if __name__ == "__main__":
     sai()

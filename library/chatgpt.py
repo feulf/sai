@@ -100,6 +100,17 @@ class ChatGPT:
             f"Total: {response['total']}, Limit: {response['limit']}, Offset: {response['offset']}"  # noqa: E501
         )
 
+    def delete_chats(self, conversation_id: list[str]):
+        for _id in conversation_id:
+            click.secho(f"Deleting chat {_id}", fg=CHATGPT)
+            response = requests.patch(
+                self.conversation_url.format(conversation_id=_id),
+                headers=self.headers,
+                json={"is_visible": False},
+            )
+            if response.status_code != 200:
+                raise Exception(f"Error: {response.status_code} {response.text}")
+
     def _get_last_message(self, conversation_id: str):
         messages = self._get_messages_in_chat(conversation_id)
         return messages[-1]

@@ -18,6 +18,9 @@ NO_VERBOSITY = 0
 class ChatGPT:
     url = "https://chat.openai.com/backend-api/conversation"
     chat_list_url = "https://chat.openai.com/backend-api/conversations"
+    conversation_url = (
+        "https://chat.openai.com/backend-api/conversation/{conversation_id}"
+    )
     chat_url = "https://chat.openai.com/chat/{chat_id}"
 
     def __init__(
@@ -96,6 +99,29 @@ class ChatGPT:
         click.secho(
             f"Total: {response['total']}, Limit: {response['limit']}, Offset: {response['offset']}"  # noqa: E501
         )
+
+    def _get_last_message(self, conversation_id: str):
+        messages = self._get_messages_in_chat(conversation_id)
+        return messages[-1]
+
+    def _get_messages_in_chat(self, conversation_id: str):
+        response = requests.get(
+            self.conversation_url.format(conversation_id=conversation_id),
+            headers=self.headers,
+        )
+        if response.status_code != 200:
+            raise Exception(f"Error: {response.status_code} {response.text}")
+
+        response = response.json()
+
+        return [
+            {
+                "id": _id,
+                "author": message["author"]["role"],
+                "message": message["content"]["parts"][0],
+            }
+            for _id, message in response["mapping"].items()
+        ]
 
     def _post(self, payload: dict):
         return requests.post(self.url, headers=self.headers, json=payload)

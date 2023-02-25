@@ -1,0 +1,38 @@
+files: >
+  (?x)^(
+      .|
+  )
+#exclude: >
+#  (?x)^(
+#  )
+default_language_version:
+  python: python3.9.11
+repos:
+  - repo: local
+    hooks:
+      - id: pyupgrade
+        name: pyupgrade
+        entry: pyupgrade
+        language: python
+        types: [python]
+        args: [--py39-plus]
+      - id: reorder-python-imports
+        name: reorder-python-imports
+        entry: reorder-python-imports
+        language: python
+        types: [python]
+        args:
+          [
+            --application-directories=.,
+#            --unclassifiable-application-module=,
+          ]
+      - id: check-reorder-python-imports
+        name: check-reorder-python-imports
+        entry: reorder-python-imports
+        language: python
+        types: [python]
+        args:
+          [
+#            --application-directories=.,
+#            --unclassifiable-application-module=,
+          ]

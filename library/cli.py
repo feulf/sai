@@ -7,6 +7,6 @@ BLUE = "blue"
 WHITE = "white"
 BRIGHT_BLACK = "bright_black"
 
-YOU = YELLOW
+YOU: str = YELLOW
 CHATGPT = GREEN
 IMPORTANT = CYAN

@@ -152,9 +152,11 @@ class ChatGPT:
                 last_message = self._get_last_message(conversation_id)
                 self._save_chat_id(last_message["id"], conversation_id)
 
-    def messages_list(self, conversation_id: str):
+    def list_messages(self, conversation_id: str):
         conversation_id = conversation_id or self.conversation_id
-        messages = self._get_messages_in_chat(conversation_id)
+        messages, title = self._get_messages_in_chat(conversation_id)
+        click.secho("Here's the list of messages in ", fg=CHATGPT, nl=False)
+        click.secho(f"{title}: ", fg=IMPORTANT)
         for message in messages:
             click.secho(f"{message['create_time']} ", fg=BRIGHT_BLACK, nl=False)
             click.secho(
@@ -163,7 +165,7 @@ class ChatGPT:
             )  # noqa: E501
 
     def _get_last_message(self, conversation_id: str) -> dict:
-        messages = self._get_messages_in_chat(conversation_id)
+        messages, _ = self._get_messages_in_chat(conversation_id)
         return messages[-1]
 
     def _get_messages_in_chat(self, conversation_id: str):
@@ -178,19 +180,23 @@ class ChatGPT:
 
         messages = []
         for _id, message in response["mapping"].items():
-            if not message["message"] or not message["message"]["content"]['parts'][0]:
+            if not message["message"] or not message["message"]["content"]["parts"][0]:
                 continue
 
             message = message["message"]
             messages.append(
                 {
                     "id": _id,
-                    "create_time": datetime.fromtimestamp(message["create_time"]).strftime("%Y-%m-%d %H:%M:%S"),  # noqa: E501
+                    "create_time": datetime.fromtimestamp(
+                        message["create_time"]
+                    ).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    ),  # noqa: E501
                     "author": message["author"]["role"],
                     "message": message["content"]["parts"][0],
                 }
             )
-        return messages
+        return messages, response["title"]
 
     def _post(self, payload: dict):
         return requests.post(self.url, headers=self.headers, json=payload)

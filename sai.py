@@ -77,7 +77,7 @@ def select(conversation_id):
 def list_messages(conversation_id: str = None):
     """List all the storage you have created"""
     chatgpt = ChatGPT()
-    chatgpt.messages_list(conversation_id)
+    chatgpt.list_messages(conversation_id)
 
 
 if __name__ == "__main__":

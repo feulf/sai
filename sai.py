@@ -25,7 +25,7 @@ def train(path):
     chatgpt = ChatGPT()
     train_project(chatgpt, path)
     click.secho("Training done! Now you can ask questions about your project.")
-    click.launch(chatgpt.chat_url.format(chatgpt.conversation_id))
+    click.launch(chatgpt.chat_url.format(chat_id=chatgpt.conversation_id))
 
 
 @sai.command()
@@ -62,7 +62,6 @@ def delete(conversation_ids):
     """Delete a conversation"""
     chatgpt = ChatGPT()
     chatgpt.delete_chats(conversation_ids)
-
 
 @sai.command()
 @click.argument("conversation_id")

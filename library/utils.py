@@ -21,6 +21,10 @@ def prompt_from_filepath_and_content(contents: dict, question: str = None) -> st
     )
     return prompt
 
+START_QUESTION = (
+    "I'm going to paste the content of the files in my project and their filepaths. Wait for me to say UPLOAD_COMPLETED before you start answering. "  # noqa: E501
+    "I'll ask you questions after that."
+)
 
 def train_project(chatgpt: ChatGPT, path: str):
     filepaths = get_filepaths(path)

@@ -1,83 +1,83 @@
-import click
+#!/usr/bin/env python3
+import requests
+import sys
+import os
+import pyperclip
+import warnings
 
-from library.chatgpt import ChatGPT
-from library.chatgpt import ONLY_ANSWER
-from library.cli import IMPORTANT
-from library.utils import train_project
+# Suppress all UserWarnings
+warnings.filterwarnings('ignore', category=UserWarning)
 
-
-@click.group()
-def sai():
-    """Sai is a command line tool to use ChatGPT to ask questions about your project"""
-
-
-# todo: add ignore and parse wildcards option
-@sai.command()
-@click.argument("path", default=".", type=click.Path(exists=True))
-def train(path):
-    """Read all the files in a folder and train ChatGPT on them via a prompt"""
-
-    click.secho(
-        "This command opens a new chat and train ChatGPT on the proejct you're listing."
-    )
-    input("Do you want to continue? (Press enter to continue)")
-
-    chatgpt = ChatGPT()
-    train_project(chatgpt, path)
-    click.secho("Training done! Now you can ask questions about your project.")
-    click.launch(chatgpt.chat_url.format(chat_id=chatgpt.conversation_id))
+SAI_RESPONSE = "default"
+SAI_ERROR = "red"
+SAI_RUN = "green"
+SAI_QUESTION = "yellow"
 
 
-@sai.command()
-@click.argument("question", required=False)
-def ask(question: str = None):
-    """Ask any question about the project"""
+def cprint(text, status="default", new_line=True):
+    colors = {
+        "default": "\033[0m",
+        "red": "\033[91m",
+        "green": "\033[92m",
+        "yellow": "\033[93m",
+    }
+    end_char = '\n' if new_line else ''
+    print(colors[status] + text + colors["default"], end=end_char)
 
-    chatgpt = ChatGPT()
-    chatgpt.verbosity = ONLY_ANSWER
 
-    if question is None:
-        click.secho("You can now start a conversation with ChatGPT.")
-        click.secho("Write stop or exit to stop the conversation.", fg=IMPORTANT)
+def chat_with_gpt(prompt):
+    OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    data = {
+        "model": "gpt-4",  # Specify the GPT-4 model
+        "messages": [
+            {
+                "role": "system",
+                "content": "You are SAI a command line tool for OSX. I'm going to ask you questions about my command line. "
+                           "Whenever possible reply with just the command wrapped in backticks. "
+                           "If you don't know the answer reply with 'SAI_ERROR:' and the description of the error"
+            },
+            {"role": "user", "content": prompt}
+        ]
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+    response_data = response.json()
+    # Extract the assistant's response from the messages
+    r = response_data['choices'][0]['message']['content'].strip()
+
+    if r[0:10] == "SAI_ERROR:":
+        return SAI_ERROR, r[10:]
+
+    if r[0] == "`" and r[-1] == "`":
+        return SAI_RUN, r[1:-1]
+
+    return SAI_RESPONSE, r
+
+
+def copy_command(command):
+    pyperclip.copy(command)
+
+
+def main():
+    if len(sys.argv) < 2:
+        cprint("Provide a prompt: ", SAI_QUESTION, new_line=False)
+        prompt = input()
     else:
-        chatgpt.ask(question)
+        prompt = sys.argv[1]
 
-    while True:
-        prompt = input("You: ")
-        if prompt in ["stop", "exit"]:
-            break
-        chatgpt.ask(prompt)
+    status, response = chat_with_gpt(prompt)
+    cprint(response, status, new_line=False)
 
-
-@sai.command()
-def list():
-    """List all the storage you have created"""
-    chatgpt = ChatGPT()
-    chatgpt.list_chats()
-
-
-@sai.command()
-@click.argument("conversation_ids", nargs=-1)
-def delete(conversation_ids):
-    """Delete a conversation"""
-    chatgpt = ChatGPT()
-    chatgpt.delete_chats(conversation_ids)
-
-@sai.command()
-@click.argument("conversation_id")
-def select(conversation_id):
-    """Delete a conversation"""
-    chatgpt = ChatGPT()
-    chatgpt.select_chat(chat_id=conversation_id)
-
-
-@sai.command()
-@click.argument("conversation_id", required=False)
-def list_messages(conversation_id: str = None):
-    """List all the storage you have created"""
-    chatgpt = ChatGPT()
-    chatgpt.list_messages(conversation_id)
+    if status == SAI_RUN:
+        copy_command(response)
+        print("  copied to clipboard")
 
 
 if __name__ == "__main__":
-    sai()
+    main()
